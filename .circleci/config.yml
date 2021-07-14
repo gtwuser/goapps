@@ -21,6 +21,12 @@ jobs:
           name: Run tests
           command: |
             mkdir -p /tmp/test-reports
-            gotestsum --junitfile /tmp/test-reports/unit-tests.xml
+            GOFLAGS="-mod=mod" go test -timeout 180000ms -v -cover ./... \
+            -coverprofile=/tmp/test-reports/cp.out
+            echo "==> Ensure go-junit-report exists"
+            which go-junit-report >/dev/null 2>&1 || \
+            (cd /tmp; GO111MODULE=on go get -u github.com/jstemmer/go-junit-report@v0.9.1)
+            GOFLAGS="-mod=mod" go test -timeout 180000ms -v -cover ./... 2>&1 | go-junit-report > /tmp/test-reports/junit-report.xml
+            cat /tmp/test-reports/junit-report.xml
       - store_test_results:
           path: /tmp/test-reports
